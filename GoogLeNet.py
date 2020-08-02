@@ -17,7 +17,7 @@ class InceptionModule(tf.keras.Model):
             5, 5), padding='same', activation=activation)
 
         self.maxpool = tf.keras.layers.MaxPool2D(pool_size=(
-            3, 3), strides=(1, 1), padding='same', activation=activation)
+            3, 3), strides=(1, 1), padding='same')
         self.conv1_3 = tf.keras.layers.Conv2D(filter_outs[2], kernel_size=(
             1, 1), padding='same', activation=activation)
 
@@ -55,18 +55,18 @@ class GoogleNet(tf.keras.Model):
         self.bn2 = tf.keras.layers.BatchNormalization()
         self.pool2 = tf.keras.layers.MaxPool2D((2, 2))  # 8x8x32
         self.inception1 = InceptionModule(
-            [(32, 64), (8, 16), 16, 32], activation='relu')
+            [(32, 64), (8, 16), 16, 32], activation=activation)
         self.inception2 = InceptionModule(
-            [(24, 48), (6, 12), 16, 30], activation='relu')
+            [(24, 48), (6, 12), 16, 30], activation=activation)
         self.inception3 = InceptionModule(
-            [(20, 40), (6, 12), 16, 48], activation='relu')
+            [(20, 40), (6, 12), 16, 48], activation=activation)
         self.inception4 = InceptionModule(
-            [(16, 32), (4, 8), 16, 64], activation='relu')
+            [(16, 32), (4, 8), 16, 64], activation=activation)
         self.pool3 = tf.keras.layers.MaxPooling2D((2, 2))  # 4x4
         self.inception5 = InceptionModule(
-            [(8, 16), (4, 16), 16, 48], activation='relu')
-        self.pool4 = tf.keras.layers.GlobalAveragePooling2D((3, 3))
-        self.drop = tf.keras.layers.Dropout(0.4)
+            [(8, 16), (4, 16), 16, 48], activation=activation)
+        self.pool4 = tf.keras.layers.GlobalAveragePooling2D()
+        self.drop1 = tf.keras.layers.Dropout(0.4)
         self.dense1 = tf.keras.layers.Dense(256, activation=activation)
         self.dense2 = tf.keras.layers.Dense(10, activation='softmax')
 
@@ -87,6 +87,6 @@ class GoogleNet(tf.keras.Model):
         h = self.pool3(h)
         h = self.inception5(h)
         h = self.pool4(h)
-        h = self.drop(h)
+        h = self.drop1(h)
         h = self.dense1(h)
         return self.dense2(h)
