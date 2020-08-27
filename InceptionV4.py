@@ -2,7 +2,7 @@ import tensorflow as tf
 
 
 # Stem 부분은 filter concatenate 기준으로 3 block으로 나눠서 구현
-# 논문에서 표기된 부분 이외의 layer에서는 padding='same', strides=(1,1)
+# 논문에서 표기된 부분 이외의 layer에서는 padding='valid', strides=(2,2)
 class stemBlock1(tf.keras.layers.Layer):
     def __init__(self, strides=(2, 2), padding='valid', **kwargs):
         super().__init__(**kwargs)
