@@ -19,7 +19,7 @@ class ResNextBlock(tf.keras.layers.Layer):
         self.bn2 = tf.keras.layers.BatchNormalization()
         self.elu2 = tf.keras.layers.ELU()
         self.conv2 = tf.keras.layers.Conv2D(
-            filter_in//2, kernel_size, padding='same', kernel_initializer="he_normal", group=cardinality, kernel_constraint=tf.keras.constraints.max_norm(3.))
+            filter_in//2, kernel_size, padding='same', kernel_initializer="he_normal", groups=cardinality, kernel_constraint=tf.keras.constraints.max_norm(3.))
 
         self.bn3 = tf.keras.layers.BatchNormalization()
         self.elu3 = tf.keras.layers.ELU()
