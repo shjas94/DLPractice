@@ -43,6 +43,7 @@ class stemBlock1(tf.keras.layers.Layer):
 
 class stemBlock2(tf.keras.layers.Layer):
     def __init__(self, padding='valid', **kwargs):
+        super().__init__(**kwargs)
         ## HyperParameters##
         self.padding = padding
         ####################
@@ -81,7 +82,8 @@ class stemBlock2(tf.keras.layers.Layer):
 
 
 class stemBlock3(tf.keras.layers.Layer):
-    def __init__(self, strides=(2, 2), padding='valid'):
+    def __init__(self, strides=(2, 2), padding='valid', **kwargs):
+        super().__init__(**kwargs)
         ## HyperParameters##
         self.strides = strides
         self.padding = padding
@@ -104,4 +106,23 @@ class stemBlock3(tf.keras.layers.Layer):
 
 
 class stemLayer(tf.keras.layers.Layer):
-    pass
+    def __init__(self, strides=(2, 2), padding='valid', **kwargs):
+        super().__init__(**kwargs)
+        ## HyperParameters##
+        self.strides = strides
+        self.padding = padding
+        ####################
+
+        self.stem1 = stemBlock1(strides=self.strides, padding=self.padding)
+        self.stem2 = stemBlock2(padding=self.padding)
+        self.stem3 = stemBlock3(strides=self.strides, padding=self.padding)
+
+    def call(self, x):
+        h = self.stem1(x)
+        h = self.stem2(h)
+        return self.stem3(h)
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({"strides": self.strides, "padding": self.padding})
+        return config
