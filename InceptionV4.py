@@ -1,8 +1,11 @@
 import tensorflow as tf
 
+########### Stem Block ##########
 
 # Stem 부분은 filter concatenate 기준으로 3 block으로 나눠서 구현
 # 논문에서 표기된 부분 이외의 layer에서는 padding='valid', strides=(2,2)
+
+
 class stemBlock1(tf.keras.layers.Layer):
     def __init__(self, strides=(2, 2), padding='valid', **kwargs):
         super().__init__(**kwargs)
@@ -106,23 +109,91 @@ class stemBlock3(tf.keras.layers.Layer):
 
 
 class stemLayer(tf.keras.layers.Layer):
-    def __init__(self, strides=(2, 2), padding='valid', **kwargs):
+    def __init__(self, strides=(2, 2), padding='valid', residual=False, *kwargs):
         super().__init__(**kwargs)
         ## HyperParameters##
         self.strides = strides
         self.padding = padding
+        self.residual = residual
         ####################
-
-        self.stem1 = stemBlock1(strides=self.strides, padding=self.padding)
-        self.stem2 = stemBlock2(padding=self.padding)
-        self.stem3 = stemBlock3(strides=self.strides, padding=self.padding)
+        if self.residual:
+            pass
+        else:
+            self.stem1 = stemBlock1(strides=self.strides, padding=self.padding)
+            self.stem2 = stemBlock2(padding=self.padding)
+            self.stem3 = stemBlock3(strides=self.strides, padding=self.padding)
 
     def call(self, x):
-        h = self.stem1(x)
-        h = self.stem2(h)
-        return self.stem3(h)
+        if self.residual:
+            pass
+        else:
+            h = self.stem1(x)
+            h = self.stem2(h)
+            return self.stem3(h)
 
     def get_config(self):
         config = super().get_config()
-        config.update({"strides": self.strides, "padding": self.padding})
+        config.update({"strides": self.strides,
+                       "padding": self.padding, "residual": self.residual})
         return config
+
+
+########## Inception Module ##########
+class Inception_A(tf.keras.layers.Layer):
+    def __init__(self, filter_out, residual=False, **kwargs):
+        super().__init__(**kwargs)
+        ## HyperParameters##
+        self.filter_out = filter_out
+        self.residual = residual
+        ####################
+        if residual:
+            pass
+        else:
+            self.avgpool = tf.keras.layers.AveragePooling2D()
+            self.conv1 = tf.keras.layers.Conv2D(self.filter_out, kernel_size=(
+                1, 1), padding='same', activation='elu', kernel_initializer='he_normal')
+
+            self.conv2 = tf.keras.layers.Conv2D(self.filter_out, kernel_size=(
+                1, 1), padding='same', activation='elu', kernel_initializer='he_normal')
+
+            self.conv3_1 = tf.keras.layers.Conv2D((self.filter_out//3)*2, kernel_size=(
+                1, 1), padding='same', activation='elu', kernel_initializer='he_normal')
+            self.conv3_2 = tf.keras.layers.Conv2D(self.filter_out, kernel_size=(
+                3, 3), padding='same', activation='elu', kernel_initializer='he_normal')
+
+            self.conv4_1 = tf.keras.layers.Conv2D((self.filter_out//3)*2, kernel_size=(
+                1, 1), padding='same', activation='elu', kernel_initializer='he_normal')
+            self.conv4_2 = tf.keras.layers.Conv2D(self.filter_out, kernel_size=(
+                3, 3), padding='same', activation='elu', kernel_initializer='he_normal')
+            self.conv4_3 = tf.keras.layers.Conv2D(self.filter_out, kernel_size=(
+                3, 3), padding='same', activation='elu', kernel_initializer='he_normal')
+
+            self.concat = tf.keras.layers.Concatenate()
+
+    def call(self, x):
+        if self.residual:
+            pass
+        else:
+            h1 = self.avgpool(x)
+            h1 = self.conv1(h1)
+
+            h2 = self.conv2(x)
+
+            h3 = self.conv3_1(x)
+            h3 = self.conv3_2(h3)
+
+            h4 = self.conv4_1(x)
+            h4 = self.conv4_2(h4)
+            h4 = self.conv4_3(h4)
+
+            return sefl.concat([h1, h2, h3, h4])
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({"filter_out": self.filter_out,
+                       "residual": self.residual})
+        return config
+
+
+class Inception_B(tf.keras.layers.Layer):
+    pass
