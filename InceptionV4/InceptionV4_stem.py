@@ -8,15 +8,16 @@ import tensorflow as tf
 
 
 class stemBlock1(tf.keras.layers.Layer):
-    def __init__(self, strides=(2, 2), padding='valid', **kwargs):
+    def __init__(self, input_shape, strides=(2, 2), padding='valid', **kwargs):  # input shape 부분 추가하기
         super().__init__(**kwargs)
         ## HyperParameters##
+        self.input_shape = input_shape  # tuple
         self.strides = strides
         self.padding = padding
         ####################
 
         self.conv1 = tf.keras.layers.Conv2D(
-            32, (3, 3), strides=self.strides, padding=self.padding, activation='elu', kernel_initializer='he_normal')
+            32, (3, 3), strides=self.strides, padding=self.padding, input_shape=self.input_shape, activation='elu', kernel_initializer='he_normal')
         self.conv2 = tf.keras.layers.Conv2D(32, (3, 3), strides=(
             1, 1), padding=self.padding, activation='elu', kernel_initializer='he_normal')
         self.conv3 = tf.keras.layers.Conv2D(64, (3, 3), strides=(
@@ -41,7 +42,8 @@ class stemBlock1(tf.keras.layers.Layer):
 
     def get_config(self):
         config = super().get_config()
-        config.update({"strides": self.strides, "padding": self.padding})
+        config.update({"input_shape": self.input_shape,
+                       "strides": self.strides, "padding": self.padding})
         return config
 
 
@@ -93,7 +95,7 @@ class stemBlock3(tf.keras.layers.Layer):
         self.padding = padding
         ####################
 
-        self.conv = tf.keras.layers.Conv2D(192, strides=(
+        self.conv = tf.keras.layers.Conv2D(192, (3, 3), strides=(
             1, 1), padding=padding, activation='elu', kernel_initializer='he_normal')
         self.pool = tf.keras.layers.MaxPool2D(strides=strides, padding=padding)
         self.concat = tf.keras.layers.Concatenate()
@@ -110,30 +112,25 @@ class stemBlock3(tf.keras.layers.Layer):
 
 
 class stemLayer(tf.keras.layers.Layer):
-    def __init__(self, strides=(2, 2), padding='valid', residual=False, *kwargs):
+    def __init__(self, input_shape, strides=(2, 2), padding='valid', **kwargs):
         super().__init__(**kwargs)
         ## HyperParameters##
+        self.input_shape = input_shape
         self.strides = strides
         self.padding = padding
-        self.residual = residual
         ####################
-        if self.residual:
-            pass
-        else:
-            self.stem1 = stemBlock1(strides=self.strides, padding=self.padding)
-            self.stem2 = stemBlock2(padding=self.padding)
-            self.stem3 = stemBlock3(strides=self.strides, padding=self.padding)
+        self.stem1 = stemBlock1(strides=self.strides, padding=self.padding)
+        self.stem2 = stemBlock2(padding=self.padding)
+        self.stem3 = stemBlock3(strides=self.strides, padding=self.padding)
 
     def call(self, x):
-        if self.residual:
-            pass
-        else:
-            h = self.stem1(x)
-            h = self.stem2(h)
-            return self.stem3(h)
+
+        h = self.stem1(x)
+        h = self.stem2(h)
+        return self.stem3(h)
 
     def get_config(self):
         config = super().get_config()
         config.update({"strides": self.strides,
-                       "padding": self.padding, "residual": self.residual})
+                       "padding": self.padding, "input_shape": self.input_shape})
         return config
